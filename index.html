@@ -1,0 +1,2157 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#E50914">
+  <title>Netflix</title>
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      outline: none !important;
+    }
+
+    :root {
+      --neon-red: #ff0040;
+      --neon-red-glow: rgba(255, 0, 64, 0.6);
+      --neon-green: #00ff00;
+      --neon-green-glow: rgba(0, 255, 0, 0.6);
+      --deep-black: #000000;
+      --text-primary: rgba(255, 255, 255, 0.95);
+      --text-muted: rgba(255, 255, 255, 0.5);
+      --glass-bg: rgba(20, 0, 0, 0.4);
+      --glass-border: rgba(255, 0, 64, 0.3);
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      background: var(--deep-black);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+      color: var(--text-primary);
+      -webkit-font-smoothing: antialiased;
+      background: radial-gradient(ellipse 800px 600px at 50% 50%, rgba(255, 0, 64, 0.15), transparent 70%), var(--deep-black);
+    }
+
+    .screen {
+      display: none;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    /* ==========================================
+       LOGIN SCREEN
+    ========================================== */
+    #loginScreen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .particle {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: var(--neon-red);
+      border-radius: 50%;
+      opacity: 0;
+      animation: particleFloat 8s infinite ease-in-out;
+    }
+
+    @keyframes particleFloat {
+      0% {
+        opacity: 0;
+        transform: translateY(100vh) translateX(0);
+      }
+      10% {
+        opacity: 0.8;
+      }
+      90% {
+        opacity: 0.8;
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(-100vh) translateX(100px);
+      }
+    }
+
+    .login-container {
+      position: relative;
+      z-index: 10;
+      width: 90%;
+      max-width: 420px;
+      padding: 40px 30px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 2px solid var(--glass-border);
+      border-radius: 24px;
+      box-shadow: 0 0 60px rgba(255, 0, 64, 0.3);
+      animation: containerFadeIn 0.6s ease-out;
+    }
+
+    @keyframes containerFadeIn {
+      from {
+        opacity: 0;
+        transform: scale(0.9) translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    .logo-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 30px;
+    }
+
+    .crosshair-svg {
+      width: 100px;
+      height: 100px;
+    }
+
+    .crosshair-outer {
+      stroke: var(--neon-red);
+      fill: none;
+      stroke-width: 3;
+      animation: crosshairRotate 4s linear infinite;
+      transform-origin: center;
+    }
+
+    .crosshair-middle {
+      stroke: var(--neon-red);
+      fill: none;
+      stroke-width: 2;
+      animation: crosshairRotate 3s linear infinite reverse;
+      transform-origin: center;
+    }
+
+    .crosshair-center {
+      fill: var(--neon-red);
+      animation: crosshairPulse 1.5s ease-in-out infinite;
+    }
+
+    .crosshair-line {
+      stroke: var(--neon-red);
+      stroke-width: 2;
+      opacity: 0.8;
+    }
+
+    @keyframes crosshairRotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes crosshairPulse {
+      0%, 100% {
+        opacity: 1;
+        filter: drop-shadow(0 0 10px var(--neon-red-glow));
+      }
+      50% {
+        opacity: 0.6;
+        filter: drop-shadow(0 0 20px var(--neon-red-glow));
+      }
+    }
+
+    .login-title {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .login-title h1 {
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--neon-red);
+      text-shadow: 0 0 30px var(--neon-red-glow);
+      margin-bottom: 8px;
+    }
+
+    .login-title p {
+      font-size: 13px;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin: 20px auto;
+      padding: 8px 16px;
+      background: rgba(0, 255, 0, 0.1);
+      border: 1px solid var(--neon-green);
+      border-radius: 999px;
+      width: fit-content;
+    }
+
+    .status-led {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--neon-green);
+      box-shadow: 0 0 10px var(--neon-green-glow);
+      animation: ledPulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes ledPulse {
+      0%, 100% {
+        opacity: 1;
+        box-shadow: 0 0 10px var(--neon-green-glow);
+      }
+      50% {
+        opacity: 0.6;
+        box-shadow: 0 0 20px var(--neon-green-glow);
+      }
+    }
+
+    .status-badge span {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--neon-green);
+    }
+
+    .login-form {
+      margin-top: 30px;
+    }
+
+    .input-group {
+      margin-bottom: 20px;
+    }
+
+    .input-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      color: var(--text-primary);
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 20px;
+      height: 20px;
+      fill: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 14px 14px 14px 44px;
+      background: rgba(0, 0, 0, 0.6);
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      font-size: 14px;
+      color: var(--text-primary);
+      outline: none;
+      transition: all 0.3s ease;
+      font-family: inherit;
+    }
+
+    .input-field:focus {
+      border-color: var(--neon-red);
+      box-shadow: 0 0 20px rgba(255, 0, 64, 0.3);
+    }
+
+    .input-field::placeholder {
+      color: var(--text-muted);
+    }
+
+    .toggle-password {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      fill: var(--text-muted);
+      transition: fill 0.2s ease;
+    }
+
+    .toggle-password:hover {
+      fill: var(--neon-red);
+    }
+
+    .error-message {
+      display: none;
+      padding: 12px;
+      background: rgba(255, 0, 64, 0.1);
+      border: 1px solid var(--neon-red);
+      border-radius: 10px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      color: var(--neon-red);
+      text-align: center;
+      animation: errorShake 0.5s ease;
+    }
+
+    .error-message.active {
+      display: block;
+    }
+
+    @keyframes errorShake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      75% { transform: translateX(10px); }
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, var(--neon-red), #ff6b6b);
+      border: 2px solid var(--neon-red);
+      border-radius: 14px;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: white;
+      cursor: pointer;
+      box-shadow: 0 0 30px rgba(255, 0, 64, 0.4);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .login-btn::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s ease, height 0.6s ease;
+    }
+
+    .login-btn:active::before {
+      width: 300px;
+      height: 300px;
+    }
+
+    .login-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 40px rgba(255, 0, 64, 0.6);
+    }
+
+    .login-btn:active {
+      transform: translateY(0);
+    }
+
+    .login-btn.loading {
+      pointer-events: none;
+      opacity: 0.7;
+    }
+
+    .login-btn.loading::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: buttonSpin 0.8s linear infinite;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    @keyframes buttonSpin {
+      to { transform: translateY(-50%) rotate(360deg); }
+    }
+
+    .login-footer {
+      margin-top: 25px;
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* ==========================================
+       PANEL STYLES
+    ========================================== */
+    .glass {
+      background: var(--glass-bg);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+    }
+
+    .app {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 12px;
+      gap: 12px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: rgba(255, 0, 64, 0.2);
+      border: 1px solid var(--neon-red);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo svg {
+      width: 20px;
+      height: 20px;
+      fill: none;
+      stroke: var(--neon-red);
+      stroke-width: 2;
+    }
+
+    .brand h1 {
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--neon-red);
+      text-shadow: 0 0 20px var(--neon-red-glow);
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(0, 255, 0, 0.1);
+      border: 1px solid var(--neon-green);
+    }
+
+    .led {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--neon-green);
+      box-shadow: 0 0 10px var(--neon-green-glow), 0 0 20px var(--neon-green-glow);
+      animation: pulseLed 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulseLed {
+      0%, 100% { 
+        opacity: 1;
+        box-shadow: 0 0 10px var(--neon-green-glow), 0 0 20px var(--neon-green-glow);
+      }
+      50% { 
+        opacity: 0.6;
+        box-shadow: 0 0 15px var(--neon-green-glow), 0 0 30px var(--neon-green-glow);
+      }
+    }
+
+    .status span {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--neon-green);
+      text-shadow: 0 0 10px var(--neon-green-glow);
+    }
+
+    .close-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: rgba(255, 0, 64, 0.15);
+      border: 1px solid var(--neon-red);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .close-btn:active {
+      transform: scale(0.95);
+    }
+
+    .close-btn svg {
+      width: 18px;
+      height: 18px;
+      stroke: var(--neon-red);
+      stroke-width: 2;
+      fill: none;
+    }
+
+    nav {
+      padding: 10px;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+
+    .tab-btn {
+      height: 48px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .tab-btn svg {
+      width: 22px;
+      height: 22px;
+      fill: rgba(255, 255, 255, 0.5);
+    }
+
+    .tab-btn:active {
+      transform: scale(0.96);
+    }
+
+    .tab-btn.active {
+      border-color: var(--neon-red);
+      background: rgba(255, 0, 64, 0.15);
+      box-shadow: 0 0 20px rgba(255, 0, 64, 0.4);
+    }
+
+    .tab-btn.active svg {
+      fill: var(--neon-red);
+      filter: drop-shadow(0 0 6px var(--neon-red));
+    }
+
+    main {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding-right: 6px;
+      padding-bottom: 140px;
+    }
+
+    main::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    main::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    main::-webkit-scrollbar-thumb {
+      background: var(--neon-red);
+      border-radius: 999px;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .tab-header {
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+
+    .tab-header svg {
+      width: 56px;
+      height: 56px;
+      margin: 0 auto 12px;
+      fill: var(--neon-red);
+      filter: drop-shadow(0 0 10px var(--neon-red-glow));
+    }
+
+    .tab-header h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--neon-red);
+      margin-bottom: 6px;
+      text-shadow: 0 0 15px var(--neon-red-glow);
+    }
+
+    .tab-header p {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .card {
+      padding: 14px;
+      background: rgba(255, 255, 255, 0.01);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+    }
+
+    .card.active {
+      border-color: var(--neon-red);
+      background: rgba(255, 0, 64, 0.08);
+      box-shadow: 0 0 25px rgba(255, 0, 64, 0.5);
+    }
+
+    .card.active .icon-box {
+      background: rgba(255, 0, 64, 0.2);
+      border-color: var(--neon-red);
+      box-shadow: 0 0 15px var(--neon-red-glow);
+    }
+
+    .card.active .icon-box svg {
+      fill: var(--neon-red);
+      filter: drop-shadow(0 0 8px var(--neon-red));
+    }
+
+    .icon-box {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 0, 64, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+
+    .icon-box svg {
+      width: 22px;
+      height: 22px;
+      fill: rgba(255, 255, 255, 0.6);
+    }
+
+    .card h3 {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .card p {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      line-height: 1.3;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .badge {
+      font-size: 9px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--neon-red);
+      background: rgba(255, 0, 64, 0.15);
+      color: var(--neon-red);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .toggle {
+      position: relative;
+      width: 52px;
+      height: 28px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .toggle::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      transition: left 0.2s ease;
+    }
+
+    .toggle.on {
+      background: rgba(255, 0, 64, 0.3);
+      border-color: var(--neon-red);
+      box-shadow: 0 0 15px rgba(255, 0, 64, 0.4);
+    }
+
+    .toggle.on::after {
+      left: 26px;
+      background: var(--neon-red);
+      box-shadow: 0 0 12px var(--neon-red-glow);
+    }
+
+    /* ==========================================
+       SENSI GENERATOR
+    ========================================== */
+    .sensi-generator {
+      padding: 18px;
+      margin-bottom: 12px;
+    }
+
+    .sensi-output {
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid var(--neon-red);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 12px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      line-height: 1.8;
+      color: var(--neon-red);
+      min-height: 120px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .sensi-output.empty {
+      color: var(--text-muted);
+      text-align: center;
+      font-style: italic;
+    }
+
+    .sensi-line {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .sensi-label {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .sensi-value {
+      color: var(--neon-red);
+      font-weight: 700;
+      text-shadow: 0 0 10px var(--neon-red-glow);
+    }
+
+    .button-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .btn-gen {
+      padding: 12px;
+      border-radius: 12px;
+      border: 2px solid;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .btn-gen:active {
+      transform: scale(0.97);
+    }
+
+    .btn-gen.primary {
+      border-color: var(--neon-red);
+      background: rgba(255, 0, 64, 0.2);
+      color: var(--neon-red);
+      box-shadow: 0 0 20px rgba(255, 0, 64, 0.3);
+    }
+
+    .btn-gen.secondary {
+      border-color: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.03);
+      color: white;
+    }
+
+    .slider-section {
+      padding: 18px;
+      margin-bottom: 12px;
+    }
+
+    .slider-control {
+      margin-bottom: 20px;
+    }
+
+    .slider-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .slider-header strong {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .value-display {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 999px;
+      background: rgba(255, 0, 64, 0.15);
+      border: 1px solid var(--neon-red);
+      color: var(--neon-red);
+      min-width: 65px;
+      text-align: center;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 5px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      outline: none;
+      margin-bottom: 6px;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--neon-red);
+      cursor: pointer;
+      box-shadow: 0 0 12px var(--neon-red-glow);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--neon-red);
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 0 12px var(--neon-red-glow);
+    }
+
+    .slider-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.3);
+    }
+
+    /* ==========================================
+       INJECTION PANEL
+    ========================================== */
+      {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 12px;
+      background: linear-gradient(to top, var(--deep-black), var(--deep-black) 90%, transparent);
+      z-index: 50;
+    }
+
+    .footer-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .injection-panel {
+      display: none;
+      padding: 24px;
+      margin-bottom: 12px;
+      border-radius: 20px;
+      background: rgba(0, 0, 0, 0.98);
+      border: 3px solid var(--neon-red);
+      box-shadow: 0 0 50px var(--neon-red-glow), inset 0 0 30px rgba(255, 0, 64, 0.1);
+    }
+
+    .injection-panel.active {
+      display: block;
+    }
+
+    .processor-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+
+    .processor-svg {
+      width: 80px;
+      height: 80px;
+    }
+
+    .processor-core {
+      fill: var(--neon-red);
+      animation: processorPulse 1.2s ease-in-out infinite;
+    }
+
+    @keyframes processorPulse {
+      0%, 100% {
+        opacity: 1;
+        filter: drop-shadow(0 0 15px var(--neon-red-glow));
+      }
+      50% {
+        opacity: 0.3;
+        filter: drop-shadow(0 0 30px var(--neon-red-glow));
+      }
+    }
+
+    .processor-ring {
+      stroke: var(--neon-red);
+      fill: none;
+      stroke-width: 2;
+      animation: processorRotate 2.5s linear infinite;
+      transform-origin: center;
+    }
+
+    @keyframes processorRotate {
+      from {
+        transform: rotate(0deg);
+      }
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .terminal-logs {
+      background: rgba(0, 0, 0, 0.9);
+      border: 1px solid var(--neon-red);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 14px;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      line-height: 1.7;
+      color: var(--neon-red);
+      min-height: 160px;
+      max-height: 160px;
+      overflow-y: auto;
+    }
+
+    .terminal-logs::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .terminal-logs::-webkit-scrollbar-thumb {
+      background: var(--neon-red);
+      border-radius: 999px;
+    }
+
+    .log-line {
+      margin-bottom: 5px;
+      opacity: 0;
+      animation: logFadeIn 0.2s ease-out forwards;
+    }
+
+    @keyframes logFadeIn {
+      from {
+        opacity: 0;
+        transform: translateX(-15px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .log-system {
+      color: #00d9ff;
+    }
+
+    .log-module {
+      color: #ffaa00;
+    }
+
+    .log-memory {
+      color: #ff6b6b;
+    }
+
+    .log-success {
+      color: var(--neon-green);
+      font-weight: 700;
+      text-shadow: 0 0 15px var(--neon-green-glow);
+    }
+
+    .log-info {
+      color: #9d4edd;
+    }
+
+    .progress-bar {
+      height: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 14px;
+      border: 1px solid rgba(255, 0, 64, 0.3);
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--neon-red), #ff6b6b);
+      border-radius: 999px;
+      width: 0%;
+      box-shadow: 0 0 20px var(--neon-red-glow);
+      transition: width 0.2s ease;
+    }
+
+    .injection-complete {
+      display: none;
+      text-align: center;
+      padding: 16px;
+      background: rgba(0, 255, 0, 0.05);
+      border-radius: 16px;
+      border: 2px solid var(--neon-green);
+      box-shadow: 0 0 40px var(--neon-green-glow), inset 0 0 30px rgba(0, 255, 0, 0.1);
+    }
+
+    .injection-complete.active {
+      display: block;
+      animation: successPulse 0.8s ease-out;
+    }
+
+    @keyframes successPulse {
+      0% {
+        opacity: 0;
+        transform: scale(0.8);
+      }
+      50% {
+        transform: scale(1.05);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .checkmark {
+      font-size: 48px;
+      color: var(--neon-green);
+      margin-bottom: 10px;
+      text-shadow: 0 0 30px var(--neon-green-glow), 0 0 50px var(--neon-green-glow);
+      animation: checkmarkBounce 0.6s ease-out;
+    }
+
+    @keyframes checkmarkBounce {
+      0%, 100% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.2);
+      }
+    }
+
+    .injection-complete h4 {
+      font-size: 18px;
+      font-weight: 900;
+      color: var(--neon-green);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      text-shadow: 0 0 25px var(--neon-green-glow), 0 0 40px var(--neon-green-glow);
+    }
+
+    .injection-complete p {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .button-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .btn {
+      padding: 14px 18px;
+      border-radius: 16px;
+      border: 2px solid;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-primary {
+      border-color: var(--neon-red);
+      background: rgba(255, 0, 64, 0.2);
+      color: white;
+      box-shadow: 0 0 25px rgba(255, 0, 64, 0.3);
+    }
+
+    .btn-secondary {
+      border-color: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.03);
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==========================================
+       LOGIN SCREEN
+  ========================================== -->
+  <div id="loginScreen" class="screen active">
+    <div class="particles" id="particles"></div>
+
+    <div class="login-container">
+      <div class="logo-container">
+        <svg class="crosshair-svg" viewBox="0 0 100 100">
+          <circle class="crosshair-outer" cx="50" cy="50" r="40" />
+          <circle class="crosshair-middle" cx="50" cy="50" r="28" />
+          <circle class="crosshair-center" cx="50" cy="50" r="6" />
+          <line class="crosshair-line" x1="50" y1="10" x2="50" y2="30" />
+          <line class="crosshair-line" x1="50" y1="70" x2="50" y2="90" />
+          <line class="crosshair-line" x1="10" y1="50" x2="30" y2="50" />
+          <line class="crosshair-line" x1="70" y1="50" x2="90" y2="50" />
+          <line class="crosshair-line" x1="20" y1="20" x2="28" y2="28" />
+          <line class="crosshair-line" x1="80" y1="20" x2="72" y2="28" />
+          <line class="crosshair-line" x1="20" y1="80" x2="28" y2="72" />
+          <line class="crosshair-line" x1="80" y1="80" x2="72" y2="72" />
+        </svg>
+      </div>
+
+      <div class="login-title">
+        <h1>DNZINZZK</h1>
+        <p>Sistema de Autenticação PRO</p>
+      </div>
+
+      <div class="status-badge">
+        <div class="status-led"></div>
+        <span>Sistema Ativo</span>
+      </div>
+
+      <div class="error-message" id="errorMessage">
+        ❌ Key incorreta! Tente novamente.
+      </div>
+
+      <form class="login-form" id="loginForm">
+        <div class="input-group">
+          <label class="input-label">Key</label>
+          <div class="input-wrapper">
+            <svg class="input-icon" viewBox="0 0 24 24">
+              <path d="M12.65 10C11.7 7.31 8.9 5.5 5.77 6.12c-2.29.46-4.15 2.29-4.63 4.58C.32 14.57 3.26 18 7 18c2.61 0 4.83-1.67 5.65-4H17v2c0 1.1.9 2 2 2s2-.9 2-2v-2c1.1 0 2-.9 2-2s-.9-2-2-2h-8.35zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/>
+            </svg>
+            <input 
+              type="password" 
+              class="input-field" 
+              placeholder="Digite sua key" 
+              id="keyInput"
+              autocomplete="off"
+              required
+            >
+            <svg class="toggle-password" id="togglePassword" viewBox="0 0 24 24">
+              <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+            </svg>
+          </div>
+        </div>
+
+        <button type="submit" class="login-btn" id="loginBtn">
+          <span id="btnText">ACESSAR SISTEMA</span>
+        </button>
+      </form>
+
+      <div class="login-footer">
+        <p>Protegido por criptografia AES-256</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       PANEL SCREEN
+  ========================================== -->
+  <div id="panelScreen" class="screen">
+    <div class="app">
+      <header class="glass">
+        <div class="brand">
+          <div class="logo">
+            <svg viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"/>
+              <circle cx="12" cy="12" r="6"/>
+              <circle cx="12" cy="12" r="2"/>
+            </svg>
+          </div>
+          <h1>DNZINZZK</h1>
+        </div>
+        
+        <div class="status">
+          <div class="led"></div>
+          <span>ATIVO</span>
+        </div>
+        
+        <button class="close-btn" id="logoutBtn">
+          <svg viewBox="0 0 24 24">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      </header>
+
+      <nav class="glass">
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="mira">
+            <svg viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10" opacity="0.3"/>
+              <circle cx="12" cy="12" r="6"/>
+              <circle cx="12" cy="12" r="2"/>
+            </svg>
+          </button>
+          
+          <button class="tab-btn" data-tab="performance">
+            <svg viewBox="0 0 24 24">
+              <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
+            </svg>
+          </button>
+          
+          <button class="tab-btn" data-tab="arrasto">
+            <svg viewBox="0 0 24 24">
+              <path d="M20 8h-2.81c-.45-.78-1.07-1.45-1.82-1.96L17 4.41 15.59 3l-2.17 2.17C12.96 5.06 12.49 5 12 5c-.49 0-.96.06-1.41.17L8.41 3 7 4.41l1.62 1.63C7.88 6.55 7.26 7.22 6.81 8H4v2h2.09c-.05.33-.09.66-.09 1v1H4v2h2v1c0 .34.04.67.09 1H4v2h2.81c1.04 1.79 2.97 3 5.19 3s4.15-1.21 5.19-3H20v-2h-2.09c.05-.33.09-.66.09-1v-1h2v-2h-2v-1c0-.34-.04-.67-.09-1H20V8zm-6 8h-4v-2h4v2zm0-4h-4v-2h4v2z"/>
+            </svg>
+          </button>
+          
+          <button class="tab-btn" data-tab="proplayer">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/>
+            </svg>
+          </button>
+          
+          <button class="tab-btn" data-tab="config">
+            <svg viewBox="0 0 24 24">
+              <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+            </svg>
+          </button>
+        </div>
+      </nav>
+
+      <main>
+        <!-- TAB: MIRA -->
+        <div id="tab-mira" class="tab-content active">
+          <div class="glass tab-header">
+            <svg viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10" opacity="0.2"/>
+              <circle cx="12" cy="12" r="6"/>
+              <circle cx="12" cy="12" r="2"/>
+            </svg>
+            <h2>Controle de Mira</h2>
+            <p>Precisão e estabilidade máxima</p>
+          </div>
+
+          <div class="card-grid">
+            <div class="glass card" data-feature="controle-recoil">
+              <div class="icon-box">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>
+              </div>
+              <h3>Controle de Recoil</h3>
+              <p>Reduz recuo da arma</p>
+              <div class="card-footer">
+                <span class="badge">IA</span>
+                <div class="toggle"></div>
+              </div>
+            </div>
+
+            <div class="glass card" data-feature="foco-direcionado">
+              <div class="icon-box">
+                <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+              </div>
+              <h3>Foco Direcionado</h3>
+              <p>Rastreamento preciso</p>
+              <div class="card-footer">
+                <span class="badge">PRO</span>
+                <div class="toggle"></div>
+              </div>
+            </div>
+
+            <div class="glass card" data-feature="estabilizador-mira">
+              <div class="icon-box">
+                <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              </div>
+              <h3>Estabilizador</h3>
+              <p>Remove tremedeira</p>
+              <div class="card-footer">
+                <span class="badge">MAX</span>
+                <div class="toggle"></div>
+              </div>
+            </div>
+
+            <div class="glass card" data-feature="precisao-spray">
+              <div class="icon-box">
+                <svg viewBox="0 0 24 24"><path d="M22 11V3h-7v3H9V3H2v8h7V8h2v10h4v3h7v-8h-7v3h-2V8h2v3z"/></svg>
+              </div>
+              <h3>Spray Control</h3>
+              <p>Controle dispersão</p>
+              <div class="card-footer">
+                <span class="badge">ELITE</span>
+                <div class="toggle"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB: PERFORMANCE -->
+        <div id="tab-performance" class="tab-content">
+          <div class="glass tab-header">
+            <svg viewBox="0 0 24 24">
+              <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
+            </svg>
+            <h2>Performance Boost</h2>
+            <p>FPS máximo garantido</p>
+          </div>
+
+          <div class="card-grid">
+            <div class="glass card">
+              <div class="icon-box">
+                <svg viewBox="0 0 24 24"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>
+              </div>
+              <h3>Boost de FPS</h3>
+              <p>Otimiza renderização</p>
+              <div class="card-footer">
+                <span class="badge">TURBO</span>
+                <div class="toggle"></div>
+              </div>
+            </div>
+
+            <div class="glass card">
+              <div class="icon-box">
+                <svg viewBox="0 0 24 24"><path d="M3 9h14V7H3v2zm0 4h14v-2H3v2zm0 4h14v-2H3v2zm16 0h2v-2h-2v2zm0-10v2h2V7h-2zm0 6h2v-2h-2v2z"/></svg>
+              </div>
+              <h3>Anti-Lag</h3>
+              <p>Prioriza processo</p>
+              <div class="card-footer">
+                <span class="badge">FAST</span>
+                <div class="toggle"></div>
+              </div>
+            </div>
+
+            <div class="glass card">
+              <div class="icon-box">
+                <svg viewBox="0 0 24 24"><path d="M20 8h-2.81c-.45-.78-1.07-1.45-1.82-1.96L17 4.41 15.59 3l-2.17 2.17C12.96 5.06 12.49 5 12 5c-.49 0-.96.06-1.41.17L8.41 3 7 4.41l1.62 1.63C7.88 6.55 7.26 7.22 6.81 8H4v2h2.09c-.05.33-.09.66-.09 1v1H4v2h2v1c0 .34.04.67.09 1H4v2h2.81c1.04 1.79 2.97 3 5.19 3s4.15-1.21 5.19-3H20v-2h-2.09c.05-.33.09-.66.09-1v-1h2v-2h-2v-1c0-.34-.04-.67-.09-1H20V8zm-6 8h-4v-2h4v2zm0-4h-4v-2h4v2z"/></svg>
+              </div>
+              <h3>RAM Cleaner</h3>
+              <p>Libera memória</p>
+              <div class="card-footer">
+                <span class="badge">AUTO</span>
+                <div class="toggle"></div>
+              </div>
+            </div>
+
+            <div class="glass card">
+              <div class="icon-box">
+                <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+              </div>
+              <h3>Tela Estável</h3>
+              <p>Remove trepidação</p>
+              <div class="card-footer">
+                <span class="badge">LOCK</span>
+                <div class="toggle"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB: ARRASTO -->
+        <div id="tab-arrasto" class="tab-content">
+          <div class="glass tab-header">
+            <svg viewBox="0 0 24 24">
+              <path d="M20 8h-2.81c-.45-.78-1.07-1.45-1.82-1.96L17 4.41 15.59 3l-2.17 2.17C12.96 5.06 12.49 5 12 5c-.49 0-.96.06-1.41.17L8.41 3 7 4.41l1.62 1.63C7.88 6.55 7.26 7.22 6.81 8H4v2h2.09c-.05.33-.09.66-.09 1v1H4v2h2v1c0 .34.04.67.09 1H4v2h2.81c1.04 1.79 2.97 3 5.19 3s4.15-1.21 5.19-3H20v-2h-2.09c.05-.33.09-.66.09-1v-1h2v-2h-2v-1c0-.34-.04-.67-.09-1H20V8zm-6 8h-4v-2h4v2zm0-4h-4v-2h4v2z"/>
+            </svg>
+            <h2>Controle de Arrasto</h2>
+            <p>Sensibilidade ajustada</p>
+          </div>
+
+          <div class="glass slider-section">
+            <div class="glass card">
+              <div class="icon-box">
+                <svg viewBox="0 0 24 24"><path d="M20 8h-2.81c-.45-.78-1.07-1.45-1.82-1.96L17 4.41 15.59 3l-2.17 2.17C12.96 5.06 12.49 5 12 5c-.49 0-.96.06-1.41.17L8.41 3 7 4.41l1.62 1.63C7.88 6.55 7.26 7.22 6.81 8H4v2h2.09c-.05.33-.09.66-.09 1v1H4v2h2v1c0 .34.04.67.09 1H4v2h2.81c1.04 1.79 2.97 3 5.19 3s4.15-1.21 5.19-3H20v-2h-2.09c.05-.33.09-.66.09-1v-1h2v-2h-2v-1c0-.34-.04-.67-.09-1H20V8z"/></svg>
+              </div>
+              <h3>Input Lag Zero</h3>
+              <p>Resposta instantânea</p>
+              <div class="card-footer">
+                <span class="badge">0MS</span>
+                <div class="toggle"></div>
+              </div>
+            </div>
+
+            <div class="slider-control">
+              <div class="slider-header">
+                <strong>Taxa de Hertz</strong>
+                <span class="value-display" id="hzValue">60 Hz</span>
+              </div>
+              <input type="range" id="hzSlider" min="60" max="144" value="60" step="1">
+              <div class="slider-labels">
+                <span>60</span>
+                <span>90</span>
+                <span>120</span>
+                <span>144</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB: PRO PLAYER -->
+        <div id="tab-proplayer" class="tab-content">
+          <div class="glass tab-header">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/>
+            </svg>
+            <h2>Modo Pro Player</h2>
+            <p>Config profissional</p>
+          </div>
+
+          <div class="glass" style="padding: 18px; margin-bottom: 12px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div class="icon-box" style="margin: 0;">
+                  <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+                </div>
+                <div>
+                  <h3 style="font-weight: 700; margin-bottom: 2px; font-size: 14px;">Pacote Elite</h3>
+                  <p style="font-size: 11px; color: var(--text-muted); margin: 0;">Ativa tudo</p>
+                </div>
+              </div>
+              <div class="toggle" id="masterToggle"></div>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div class="glass" style="padding: 14px; display: flex; align-items: center; gap: 10px;">
+              <div class="icon-box" style="margin: 0;">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>
+              </div>
+              <div style="flex: 1;">
+                <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 2px;">Mira PRO</h4>
+                <p style="font-size: 11px; color: var(--text-muted); margin: 0;">Precisão máxima</p>
+              </div>
+            </div>
+
+            <div class="glass" style="padding: 14px; display: flex; align-items: center; gap: 10px;">
+              <div class="icon-box" style="margin: 0;">
+                <svg viewBox="0 0 24 24"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>
+              </div>
+              <div style="flex: 1;">
+                <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 2px;">Boost MAX</h4>
+                <p style="font-size: 11px; color: var(--text-muted); margin: 0;">Performance extrema</p>
+              </div>
+            </div>
+
+            <div class="glass" style="padding: 14px; display: flex; align-items: center; gap: 10px;">
+              <div class="icon-box" style="margin: 0;">
+                <svg viewBox="0 0 24 24"><path d="M3 9h14V7H3v2zm0 4h14v-2H3v2zm0 4h14v-2H3v2zm16 0h2v-2h-2v2zm0-10v2h2V7h-2zm0 6h2v-2h-2v2z"/></svg>
+              </div>
+              <div style="flex: 1;">
+                <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 2px;">Latência ZERO</h4>
+                <p style="font-size: 11px; color: var(--text-muted); margin: 0;">Input instantâneo</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB: CONFIG -->
+        <div id="tab-config" class="tab-content">
+          <div class="glass tab-header">
+            <svg viewBox="0 0 24 24">
+              <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+            </svg>
+            <h2>Configurações</h2>
+            <p>Sensi Generator & Ajustes</p>
+          </div>
+
+          <!-- SENSI GENERATOR -->
+          <div class="glass sensi-generator">
+            <h3 style="font-weight: 700; margin-bottom: 12px; font-size: 14px; color: var(--neon-red);">🎯 Gerador de Sensi</h3>
+            
+            <div id="sensiOutput" class="sensi-output empty">
+              Clique em "GERAR" para criar valores aleatórios
+            </div>
+
+            <div class="button-row">
+              <button class="btn-gen primary" id="generateBtn">GERAR</button>
+              <button class="btn-gen secondary" id="copyBtn">COPIAR</button>
+            </div>
+          </div>
+
+          <div class="glass slider-section">
+            <div class="slider-control">
+              <div class="slider-header">
+                <strong>Sensibilidade Geral</strong>
+                <span class="value-display" id="sensiValue">85</span>
+              </div>
+              <input type="range" id="sensiSlider" min="1" max="200" value="85" step="1">
+              <div class="slider-labels">
+                <span>1</span>
+                <span>100</span>
+                <span>200</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass" style="padding: 18px;">
+            <h3 style="font-weight: 600; margin-bottom: 10px; font-size: 13px;">Sobre</h3>
+            <div style="font-size: 12px; color: var(--text-muted); line-height: 1.7;">
+              <p style="margin-bottom: 6px;">Versão: <span style="color: var(--neon-red); font-family: monospace;">3.0.0</span></p>
+              <p style="margin-bottom: 6px;">Build: <span style="color: var(--neon-red); font-family: monospace;">#9999</span></p>
+              <p>Status: <span style="color: var(--neon-green);">✓ ONLINE</span></p>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <footer>
+        <div class="footer-inner">
+          <div class="injection-panel" id="injectionPanel">
+            <div class="processor-container">
+              <svg class="processor-svg" viewBox="0 0 100 100">
+                <circle class="processor-ring" cx="50" cy="50" r="40" />
+                <rect class="processor-core" x="35" y="35" width="30" height="30" rx="4"/>
+                <rect class="processor-core" x="42" y="42" width="16" height="16" rx="2"/>
+              </svg>
+            </div>
+            <div class="terminal-logs" id="terminalLogs">
+              <div class="log-line log-system">[SYSTEM] Aguardando início da injeção...</div>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="injection-complete" id="injectionComplete">
+              <div class="checkmark">✓</div>
+              <h4>INJEÇÃO COMPLETA!</h4>
+              <p>Abrindo Free Fire agora...</p>
+            </div>
+          </div>
+
+          <div class="button-grid">
+            <button class="btn btn-primary" id="injectFF">INJETAR NO FF</button>
+            <button class="btn btn-secondary" id="injectFFMax">INJETAR NO FF MAX</button>
+          </div>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+<script type="module">
+    'use strict';
+
+    // 1. IMPORTAÇÃO FIREBASE
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+    import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCYSfMGEpSZVXUA9yQVH6-8pu85S5HRxlI",
+        authDomain: "dnz-feb31.firebaseapp.com",
+        projectId: "dnz-feb31"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // 2. SELETORES GERAIS
+    const loginScreen = document.getElementById('loginScreen');
+    const panelScreen = document.getElementById('panelScreen');
+    const loginForm   = document.getElementById('loginForm');
+    const loginBtn    = document.getElementById('loginBtn');
+    const btnText     = document.getElementById('btnText');
+    const keyInput    = document.getElementById('keyInput');
+    const errorMessage = document.getElementById('errorMessage');
+
+    // 3. IDENTIFICAÇÃO DE DISPOSITIVO (HWID)
+    const getDevice = () => {
+        let id = localStorage.getItem("dnz_device");
+        if (!id) {
+            id = crypto.randomUUID();
+            localStorage.setItem("dnz_device", id);
+        }
+        return id;
+    };
+
+    // 4. LÓGICA DE LOGIN
+    if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const key = keyInput.value.trim();
+            
+            errorMessage.classList.remove('active');
+            loginBtn.classList.add('loading');
+            btnText.textContent = 'VERIFICANDO...';
+
+            try {
+                const ref = doc(db, "licenses", key);
+                const snap = await getDoc(ref);
+
+                if (!snap.exists()) {
+                    showError('❌ Key inexistente!');
+                    return;
+                }
+
+                const data = snap.data();
+                const deviceId = getDevice();
+
+                if (data.device && data.device !== deviceId) {
+                    showError('🔒 Key vinculada a outro dispositivo!');
+                    return;
+                }
+
+                await updateDoc(ref, {
+                    device: deviceId,
+                    used: true,
+                    lastLogin: new Date().toISOString()
+                });
+
+                loginScreen.style.display = 'none';
+                panelScreen.style.display = 'block';
+                panelScreen.classList.add('active');
+
+            } catch (err) {
+                showError('⚠️ Erro de conexão com o banco.');
+                console.error(err);
+            }
+        });
+    }
+
+    function showError(msg) {
+        loginBtn.classList.remove('loading');
+        btnText.textContent = 'ACESSAR SISTEMA';
+        errorMessage.textContent = msg;
+        errorMessage.classList.add('active');
+    }
+
+    // 5. NAVEGAÇÃO DE TABS
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn, .tab-content').forEach(el => el.classList.remove('active'));
+            btn.classList.add('active');
+            const target = document.getElementById('tab-' + btn.dataset.tab);
+            if (target) target.classList.add('active');
+        });
+    });
+
+    // 6. SISTEMA DE INJEÇÃO
+    const startInjection = (pkg) => {
+        const panel = document.getElementById('injectionPanel');
+        const logs = document.getElementById('terminalLogs');
+        const progress = document.getElementById('progressFill');
+        const complete = document.getElementById('injectionComplete');
+        
+        panel.classList.add('active');
+        logs.innerHTML = '';
+        
+        const steps = [
+            "Lendo estrutura do kernel...",
+            "Verificando permissões root...",
+            "Injetando scripts Anti-Ban...",
+            "Otimizando buffers de memória...",
+            "Finalizando registro..."
+        ];
+
+        let i = 0;
+        const interval = setInterval(() => {
+            if (i < steps.length) {
+                const line = document.createElement('div');
+                line.className = 'log-line';
+                line.textContent = `[INFO] ${steps[i]}`;
+                logs.appendChild(line);
+                progress.style.width = ((i + 1) * 20) + '%';
+                i++;
+            } else {
+                clearInterval(interval);
+                complete.classList.add('active');
+                setTimeout(() => {
+                    window.location.href = `intent:#Intent;package=${pkg};end`;
+                }, 1500);
+            }
+        }, 800);
+    };
+
+    document.getElementById('injectFF').onclick = () => startInjection('com.dts.freefireth');
+    document.getElementById('injectFFMax').onclick = () => startInjection('com.dts.freefiremax');
+
+    // 7. PARTÍCULAS DE FUNDO
+    const particlesContainer = document.getElementById('particles');
+    if (particlesContainer) {
+        setInterval(() => {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            p.style.left = Math.random() * 100 + '%';
+            particlesContainer.appendChild(p);
+            setTimeout(() => p.remove(), 8000);
+        }, 400);
+    }
+    
+    // 8. LOGOUT
+    document.getElementById('logoutBtn').onclick = () => location.reload();
+
+    console.log("🛡️ DNZ System v3 Loaded");
+</script>
+</body>
+</html>
+
+    // 6. ANIMAÇÃO DE PARTÍCULAS (LOGIN)
+    const particlesContainer = document.getElementById('particles');
+    if (particlesContainer) {
+        setInterval(() => {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            p.style.left = Math.random() * 100 + '%';
+            particlesContainer.appendChild(p);
+            setTimeout(() => p.remove(), 8000);
+        }, 400);
+    }
+
+    // 7. NAVEGAÇÃO DAS TABS (PAINEL)
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn, .tab-content').forEach(el => el.classList.remove('active'));
+            btn.classList.add('active');
+            const target = document.getElementById('tab-' + btn.dataset.tab);
+            if (target) target.classList.add('active');
+        });
+    });
+
+    console.log("🛡️ DNZINZZK PRO carregado.");
+</script>
+</body>
+</html>
+
+
+    // ==========================================
+    // PARTICLES ANIMATION
+    // ==========================================
+    const particlesContainer = document.getElementById('particles');
+    
+    function createParticle() {
+      const particle = document.createElement('div');
+      particle.className = 'particle';
+      particle.style.left = Math.random() * 100 + '%';
+      particle.style.animationDelay = Math.random() * 8 + 's';
+      particle.style.animationDuration = (Math.random() * 4 + 6) + 's';
+      particlesContainer.appendChild(particle);
+      setTimeout(() => particle.remove(), 10000);
+    }
+
+    setInterval(createParticle, 300);
+    for (let i = 0; i < 20; i++) createParticle();
+
+    // ==========================================
+    // LOGIN FUNCTIONALITY COM FIREBASE
+    // ==========================================
+    const loginForm    = document.getElementById('loginForm');
+    const loginBtn     = document.getElementById('loginBtn');
+    const btnText      = document.getElementById('btnText');
+    const errorMessage = document.getElementById('errorMessage');
+    const keyInput     = document.getElementById('keyInput');
+    const togglePassword = document.getElementById('togglePassword');
+    const loginScreen  = document.getElementById('loginScreen');
+    const panelScreen  = document.getElementById('panelScreen');
+
+    // Toggle mostrar/ocultar senha
+    togglePassword.addEventListener('click', () => {
+      const type = keyInput.type === 'password' ? 'text' : 'password';
+      keyInput.type = type;
+      if (type === 'text') {
+        togglePassword.innerHTML = '<path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/>';
+      } else {
+        togglePassword.innerHTML = '<path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>';
+      }
+    });
+
+    // Submit login — valida no Firebase
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const key = keyInput.value.trim();
+      errorMessage.classList.remove('active');
+      loginBtn.classList.add('loading');
+      btnText.textContent = 'VERIFICANDO...';
+
+      try {
+        const ref  = doc(db, "licenses", key);
+        const snap = await getDoc(ref);
+
+        // Key não existe no Firebase
+        if (!snap.exists()) {
+          showError('❌ Key inválida! Tente novamente.');
+          return;
+        }
+
+        const data     = snap.data();
+        const deviceId = getDevice();
+
+        // Key foi removida/desativada
+        if (data.active === false) {
+          showError('🚫 Key desativada! Contate o suporte.');
+          return;
+        }
+
+        // Key já está vinculada a outro dispositivo
+        if (data.device && data.device !== deviceId) {
+          showError('🔒 Key em uso em outro dispositivo!');
+          return;
+        }
+
+        // Primeiro acesso: vincular este dispositivo à key
+        if (!data.device) {
+          await updateDoc(ref, {
+            device: deviceId,
+            used: true,
+            lastLogin: new Date().toISOString()
+          });
+        } else {
+          // Mesmo dispositivo: atualizar último login
+          await updateDoc(ref, {
+            lastLogin: new Date().toISOString()
+          });
+        }
+
+        // ✅ Login bem-sucedido
+        console.log('%c✓ LOGIN SUCCESSFUL', 'color: #00ff00; font-weight: bold; font-size: 18px;');
+        btnText.textContent = '✓ ACESSO CONCEDIDO';
+        loginBtn.style.background   = 'linear-gradient(135deg, #00ff00, #00cc00)';
+        loginBtn.style.borderColor  = '#00ff00';
+        loginBtn.style.boxShadow    = '0 0 40px rgba(0, 255, 0, 0.6)';
+
+        setTimeout(() => {
+          loginScreen.classList.remove('active');
+          loginScreen.style.display = 'none';
+          panelScreen.classList.add('active');
+          panelScreen.style.display = 'block';
+        }, 800);
+
+      } catch (err) {
+        console.error('Firebase error:', err);
+        showError('⚠️ Erro de conexão! Tente novamente.');
+      }
+    });
+
+    function showError(msg) {
+      loginBtn.classList.remove('loading');
+      btnText.textContent = 'ACESSAR SISTEMA';
+      errorMessage.textContent = msg;
+      errorMessage.classList.add('active');
+      keyInput.value = '';
+      keyInput.focus();
+    }
+
+    // ==========================================
+    // TAB NAVIGATION
+    // ==========================================
+    const tabButtons  = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetTab = btn.dataset.tab;
+        tabButtons.forEach(b  => b.classList.remove('active'));
+        tabContents.forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('tab-' + targetTab).classList.add('active');
+      });
+    });
+
+    // ==========================================
+    // TOGGLE SWITCHES
+    // ==========================================
+    document.querySelectorAll('.toggle').forEach(toggle => {
+      if (toggle.id !== 'masterToggle') {
+        toggle.addEventListener('click', () => {
+          toggle.classList.toggle('on');
+          const card = toggle.closest('.card');
+          if (card) card.classList.toggle('active');
+        });
+      }
+    });
+
+    // ==========================================
+    // MASTER TOGGLE
+    // ==========================================
+    const masterToggle = document.getElementById('masterToggle');
+    masterToggle.addEventListener('click', () => {
+      const isOn = masterToggle.classList.contains('on');
+      masterToggle.classList.toggle('on', !isOn);
+      document.querySelectorAll('.toggle:not(#masterToggle)').forEach(t => {
+        t.classList.toggle('on', !isOn);
+        const card = t.closest('.card');
+        if (card) card.classList.toggle('active', !isOn);
+      });
+    });
+
+    // ==========================================
+    // SLIDERS
+    // ==========================================
+    const hzSlider = document.getElementById('hzSlider');
+    const hzValue  = document.getElementById('hzValue');
+    hzSlider.addEventListener('input', () => {
+      hzValue.textContent = hzSlider.value + ' Hz';
+    });
+
+    const sensiSlider = document.getElementById('sensiSlider');
+    const sensiValue  = document.getElementById('sensiValue');
+    sensiSlider.addEventListener('input', () => {
+      sensiValue.textContent = sensiSlider.value;
+    });
+
+    // ==========================================
+    // SENSI GENERATOR
+    // ==========================================
+    const generateBtn = document.getElementById('generateBtn');
+    const copyBtn     = document.getElementById('copyBtn');
+    const sensiOutput = document.getElementById('sensiOutput');
+    let generatedSensi = {};
+
+    function randomSensi() {
+      return Math.floor(Math.random() * (200 - 130 + 1)) + 130;
+    }
+
+    generateBtn.addEventListener('click', () => {
+      generatedSensi = {
+        geral:        randomSensi(),
+        pontoVermelho: randomSensi(),
+        mira2x:       randomSensi(),
+        mira4x:       randomSensi()
+      };
+      sensiOutput.classList.remove('empty');
+      sensiOutput.innerHTML =
+        '<div class="sensi-line"><span class="sensi-label">Geral:</span><span class="sensi-value">' + generatedSensi.geral + '</span></div>' +
+        '<div class="sensi-line"><span class="sensi-label">Ponto Vermelho:</span><span class="sensi-value">' + generatedSensi.pontoVermelho + '</span></div>' +
+        '<div class="sensi-line"><span class="sensi-label">Mira 2x:</span><span class="sensi-value">' + generatedSensi.mira2x + '</span></div>' +
+        '<div class="sensi-line"><span class="sensi-label">Mira 4x:</span><span class="sensi-value">' + generatedSensi.mira4x + '</span></div>';
+    });
+
+    copyBtn.addEventListener('click', () => {
+      if (Object.keys(generatedSensi).length === 0) {
+        alert('Gere Sensibilidades!');
+        return;
+      }
+      const text =
+        'Geral: '          + generatedSensi.geral        + '\n' +
+        'Ponto Vermelho: ' + generatedSensi.pontoVermelho + '\n' +
+        'Mira 2x: '        + generatedSensi.mira2x       + '\n' +
+        'Mira 4x: '        + generatedSensi.mira4x;
+
+      navigator.clipboard.writeText(text).then(() => {
+        const orig = copyBtn.textContent;
+        copyBtn.textContent = 'COPIADO!';
+        setTimeout(() => copyBtn.textContent = orig, 1500);
+      });
+    });
+
+    // ==========================================
+    // INJECTION SYSTEM
+    // ==========================================
+    const injectFF       = document.getElementById('injectFF');
+    const injectFFMax    = document.getElementById('injectFFMax');
+    const injectionPanel = document.getElementById('injectionPanel');
+    const terminalLogs   = document.getElementById('terminalLogs');
+    const progressFill   = document.getElementById('progressFill');
+    const injectionComplete = document.getElementById('injectionComplete');
+
+    const injectionSteps = [
+      { log: '[INFO] Lendo estrutura do kernel...',           type: 'info',    progress: 6,   delay: 150 },
+      { log: '[SYSTEM] Verificando permissões de root...',    type: 'system',  progress: 12,  delay: 170 },
+      { log: '[CALIBRAR] Ajustando DPI e Sensibilidade...',   type: 'module',  progress: 20,  delay: 160 },
+      { log: '[INFO] Identificando resolução da tela...',     type: 'info',    progress: 28,  delay: 140 },
+      { log: '[MIRAS] Otimizando FOV de Mira 2x e 4x...',    type: 'module',  progress: 36,  delay: 180 },
+      { log: '[BYPASS] Injetando Script Anti-Ban V3...',      type: 'system',  progress: 45,  delay: 200 },
+      { log: '[PERFORMANCE] Estabilizando FPS para 90Hz...',  type: 'module',  progress: 54,  delay: 170 },
+      { log: '[MEMORY] Limpando cache de renderização...',    type: 'memory',  progress: 63,  delay: 150 },
+      { log: '[SYSTEM] Otimizando buffers de memória...',     type: 'system',  progress: 72,  delay: 160 },
+      { log: '[MODULE] Aplicando patches de precisão...',     type: 'module',  progress: 81,  delay: 140 },
+      { log: '[MEMORY] Forçando prioridade máxima...',        type: 'memory',  progress: 90,  delay: 150 },
+      { log: '[SYSTEM] Finalizando processo de injeção...',   type: 'system',  progress: 96,  delay: 130 },
+      { log: '[SUCCESS] Registro aplicado com sucesso!',      type: 'success', progress: 100, delay: 200 }
+    ];
+
+    function addLog(message, type) {
+      const line = document.createElement('div');
+      line.className = 'log-line log-' + type;
+      line.textContent = message;
+      terminalLogs.appendChild(line);
+      terminalLogs.scrollTop = terminalLogs.scrollHeight;
+    }
+
+    function startInjection(mode) {
+      const pkg = mode === 'FF' ? 'com.dts.freefireth' : 'com.dts.freefiremax';
+      injectionPanel.classList.add('active');
+      injectionComplete.classList.remove('active');
+      progressFill.style.width = '0%';
+      terminalLogs.innerHTML = '<div class="log-line log-system">[SYSTEM] Iniciando processo de injeção...</div>';
+
+      let i = 0;
+      function runStep() {
+        if (i < injectionSteps.length) {
+          const step = injectionSteps[i];
+          addLog(step.log, step.type);
+          progressFill.style.width = step.progress + '%';
+          i++;
+          setTimeout(runStep, step.delay);
+        } else {
+          setTimeout(() => {
+            injectionComplete.classList.add('active');
+            setTimeout(() => {
+              window.location.href = 'intent:#Intent;package=' + pkg + ';end';
+              setTimeout(() => injectionPanel.classList.remove('active'), 2000);
+            }, 1500);
+          }, 300);
+        }
+      }
+      runStep();
+    }
+
+    injectFF.addEventListener('click',    () => startInjection('FF'));
+    injectFFMax.addEventListener('click', () => startInjection('FF MAX'));
+
+    // ==========================================
+    // LOGOUT
+    // ==========================================
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      if (confirm('Sair do painel?')) {
+        panelScreen.classList.remove('active');
+        panelScreen.style.display = 'none';
+        loginScreen.classList.add('active');
+        loginScreen.style.display = 'flex';
+        loginBtn.classList.remove('loading');
+        btnText.textContent = 'ACESSAR SISTEMA';
+        loginBtn.style.background  = 'linear-gradient(135deg, var(--neon-red), #ff6b6b)';
+        loginBtn.style.borderColor = 'var(--neon-red)';
+        loginBtn.style.boxShadow   = '0 0 30px rgba(255, 0, 64, 0.4)';
+        keyInput.value = '';
+        errorMessage.classList.remove('active');
+      }
+    });
+
+  </script>
+
+    // ==========================================
+    // LOGOUT BUTTON
+    // ==========================================
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      if (confirm('Sair do painel?')) {
+        panelScreen.classList.remove('active');
+        panelScreen.style.display = 'none';
+        
+        loginScreen.classList.add('active');
+        loginScreen.style.display = 'flex';
+        
+        loginBtn.classList.remove('loading');
+        btnText.textContent = 'ACESSAR SISTEMA';
+        loginBtn.style.background = 'linear-gradient(135deg, var(--neon-red), #ff6b6b)';
+        loginBtn.style.borderColor = 'var(--neon-red)';
+        loginBtn.style.boxShadow = '0 0 30px rgba(255, 0, 64, 0.4)';
+        keyInput.value = '';
+        errorMessage.classList.remove('active');
+      }
+    });
+
+    // ==========================================
+    // CONSOLE
+    // ==========================================
+    console.log('%c█████╗██╗  ██╗███████╗', 'color: #ff0040; font-weight: bold; font-size: 16px;');
+    console.log('%c██╔══╝██║  ██║╚══███╔╝', 'color: #ff0040; font-weight: bold; font-size: 16px;');
+    console.log('%c██║   ███████║  ███╔╝ ', 'color: #ff0040; font-weight: bold; font-size: 16px;');
+    console.log('%c██║   ██╔══██║ ███╔╝  ', 'color: #ff0040; font-weight: bold; font-size: 16px;');
+    console.log('%c█████╗██║  ██║███████╗', 'color: #ff0040; font-weight: bold; font-size: 16px;');
+    console.log('%c╚════╝╚═╝  ╚═╝╚══════╝', 'color: #ff0040; font-weight: bold; font-size: 16px;');
+    console.log('%cSISTEMA COMPLETO v3.0 — Key: "dnzinzzk"', 'color: #00ff00; font-size: 12px; font-weight: bold;');
+  </script>
+  
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey:"AIzaSyCYSfMGEpSZVXUA9yQVH6-8pu85S5HRxlI",
+  authDomain:"dnz-feb31.firebaseapp.com",
+  projectId:"dnz-feb31"
+});
+const db=getFirestore(app);
+
+function getDevice(){
+  let id=localStorage.getItem("dnz_device");
+  if(!id){id=crypto.randomUUID();localStorage.setItem("dnz_device",id);}
+  return id;
+}
+
+window.ativarKey=async()=>{
+  const key=keyInput.value.trim();
+  const ref=doc(db,"licenses",key);
+  const snap=await getDoc(ref);
+  if(!snap.exists()){keyMsg.innerText="❌ Key inválida";return;}
+  const d=snap.data();
+  if(d.used && d.device!==getDevice()){
+    keyMsg.innerText="❌ Key já usada";
+    return;
+  }
+  await updateDoc(ref,{used:true,device:getDevice()});
+  keyLock.style.display="none";
+};
+
+</script>
+
+</body>
+</html>
