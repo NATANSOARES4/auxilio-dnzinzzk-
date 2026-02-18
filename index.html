@@ -6,7 +6,61 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#E50914">
   <title>Netflix</title>
-  
+  <script>
+/* PROTEÇÃO TOTAL 2026 - MODO ELITE 
+   CAMADA: SENTINELA ATIVA + HASH VALIDATION
+*/
+(function() {
+    // 1. BLOQUEIO DE INSPEÇÃO (O "TRAVA-HACKER")
+    const _0xsentinel = function() {
+        function _db(i) {
+            if (("" + i / i).length !== 1 || i % 20 === 0) {
+                (function() {}.constructor("debugger")());
+            } else {
+                (function() {}.constructor("debugger")());
+            }
+            _db(++i);
+        }
+        try { _db(0); } catch (e) {}
+    };
+    setInterval(_0xsentinel, 500);
+
+    // 2. BLOQUEIO DE CLIQUES E ATALHOS (CORTA O F12 E CTRL+U)
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    window.addEventListener('keydown', e => {
+        if (e.keyCode === 123 || (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74)) || (e.ctrlKey && e.keyCode === 85)) {
+            e.preventDefault();
+            console.clear();
+            return false;
+        }
+    });
+
+    // 3. FUNÇÃO DE LOGIN (CHAME ESSA FUNÇÃO NO SEU BOTÃO)
+    window.validarAcesso = async function() {
+        const passInput = document.getElementById('sua-id-de-input-aqui').value; // <--- COLOQUE A ID DO SEU INPUT AQUI
+        
+        // Gerando o Hash SHA-256 (Senha Blindada)
+        const msg = new TextEncoder().encode(passInput);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', msg);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+        // HASH DA SENHA "123" (Exemplo)
+        // Dica: Para mudar a senha, você precisa do Hash da senha nova.
+        const hashMestre = "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3";
+
+        if (hashHex === hashMestre) {
+            alert("Acesso Liberado!");
+            // Aqui você coloca o código para mostrar seu painel
+            document.getElementById('painel-secreto').style.display = 'block';
+            document.getElementById('tela-login').style.display = 'none';
+        } else {
+            alert("❌ SENHA INVÁLIDA!");
+        }
+    };
+})();
+</script>
+
   <style>
     * {
       margin: 0;
@@ -903,22 +957,35 @@
     }
 
     /* ==========================================
-       INJECTION PANEL
+       INJECTION PANEL (CORRIGIDO)
     ========================================== */
-      {
+    footer {
       position: fixed;
       bottom: 0;
       left: 0;
       right: 0;
       padding: 12px;
-      background: linear-gradient(to top, var(--deep-black), var(--deep-black) 90%, transparent);
-      z-index: 50;
+      background: linear-gradient(to top, var(--deep-black) 80%, transparent);
+      z-index: 100; /* Aumentei para ficar sempre por cima */
     }
 
     .footer-inner {
       max-width: 1200px;
       margin: 0 auto;
+      display: flex;
+      flex-direction: column;
     }
+
+    .injection-panel {
+      display: none; /* Deixa escondido para os botões aparecerem primeiro */
+      padding: 24px;
+      margin-bottom: 12px;
+      border-radius: 20px;
+      background: rgba(0, 0, 0, 0.98);
+      border: 3px solid var(--neon-red);
+      box-shadow: 0 0 50px var(--neon-red-glow);
+    }
+
 
     .injection-panel {
       display: none;
@@ -1528,7 +1595,7 @@
             <h3 style="font-weight: 700; margin-bottom: 12px; font-size: 14px; color: var(--neon-red);">🎯 Gerador de Sensi</h3>
             
             <div id="sensiOutput" class="sensi-output empty">
-              Clique em "GERAR" para criar valores aleatórios
+              Clique em "GERAR" para criar Sensibilidades
             </div>
 
             <div class="button-row">
@@ -1598,7 +1665,6 @@
 <script type="module">
     'use strict';
 
-    // 1. IMPORTAÇÃO FIREBASE
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
     import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
@@ -1611,16 +1677,6 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // 2. SELETORES GERAIS
-    const loginScreen = document.getElementById('loginScreen');
-    const panelScreen = document.getElementById('panelScreen');
-    const loginForm   = document.getElementById('loginForm');
-    const loginBtn    = document.getElementById('loginBtn');
-    const btnText     = document.getElementById('btnText');
-    const keyInput    = document.getElementById('keyInput');
-    const errorMessage = document.getElementById('errorMessage');
-
-    // 3. IDENTIFICAÇÃO DE DISPOSITIVO (HWID)
     const getDevice = () => {
         let id = localStorage.getItem("dnz_device");
         if (!id) {
@@ -1630,12 +1686,17 @@
         return id;
     };
 
-    // 4. LÓGICA DE LOGIN
+    // --- LÓGICA DE LOGIN ---
+    const loginForm = document.getElementById('loginForm');
+    const keyInput = document.getElementById('keyInput');
+    const loginBtn = document.getElementById('loginBtn');
+    const btnText = document.getElementById('btnText');
+    const errorMessage = document.getElementById('errorMessage');
+
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const key = keyInput.value.trim();
-            
             errorMessage.classList.remove('active');
             loginBtn.classList.add('loading');
             btnText.textContent = 'VERIFICANDO...';
@@ -1643,70 +1704,127 @@
             try {
                 const ref = doc(db, "licenses", key);
                 const snap = await getDoc(ref);
-
-                if (!snap.exists()) {
-                    showError('❌ Key inexistente!');
-                    return;
-                }
+                if (!snap.exists()) { throw new Error('Key inexistente!'); }
 
                 const data = snap.data();
                 const deviceId = getDevice();
+                if (data.device && data.device !== deviceId) { throw new Error('Key em outro celular!'); }
 
-                if (data.device && data.device !== deviceId) {
-                    showError('🔒 Key vinculada a outro dispositivo!');
-                    return;
-                }
-
-                await updateDoc(ref, {
-                    device: deviceId,
-                    used: true,
-                    lastLogin: new Date().toISOString()
-                });
-
-                loginScreen.style.display = 'none';
-                panelScreen.style.display = 'block';
-                panelScreen.classList.add('active');
-
+                await updateDoc(ref, { device: deviceId, used: true, lastLogin: new Date().toISOString() });
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('panelScreen').style.display = 'block';
+                document.getElementById('panelScreen').classList.add('active');
             } catch (err) {
-                showError('⚠️ Erro de conexão com o banco.');
-                console.error(err);
+                loginBtn.classList.remove('loading');
+                btnText.textContent = 'ACESSAR SISTEMA';
+                errorMessage.textContent = "❌ " + err.message;
+                errorMessage.classList.add('active');
             }
         });
     }
 
-    function showError(msg) {
-        loginBtn.classList.remove('loading');
-        btnText.textContent = 'ACESSAR SISTEMA';
-        errorMessage.textContent = msg;
-        errorMessage.classList.add('active');
+        // --- 1. SLIDERS EM TEMPO REAL ---
+    // Faz o número mudar INSTANTANEAMENTE ao arrastar o dedo
+    const hzSlider = document.getElementById('hzSlider');
+    const hzValue = document.getElementById('hzValue');
+    if(hzSlider) {
+        hzSlider.oninput = () => {
+            hzValue.innerText = `${hzSlider.value} Hz`;
+        };
     }
 
-    // 5. NAVEGAÇÃO DE TABS
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.tab-btn, .tab-content').forEach(el => el.classList.remove('active'));
-            btn.classList.add('active');
-            const target = document.getElementById('tab-' + btn.dataset.tab);
-            if (target) target.classList.add('active');
-        });
+    const sensiSlider = document.getElementById('sensiSlider');
+    const sensiValue = document.getElementById('sensiValue');
+    if(sensiSlider) {
+        sensiSlider.oninput = () => {
+            sensiValue.innerText = sensiSlider.value;
+        };
+    }
+
+        // --- GERADOR DE SENSI (FIXED 130-200) ---
+    const genBtn = document.getElementById('generateBtn');
+    const sensiOut = document.getElementById('sensiOutput');
+    
+    if(genBtn) {
+        genBtn.onclick = () => {
+            // Gera um número base entre 130 e 200
+            const r = () => Math.floor(Math.random() * (200 - 130 + 1)) + 130;
+            
+            const s = { 
+                g: r(), 
+                r: r(), 
+                m2: r(), 
+                m4: r() 
+            };
+            
+            sensiOut.classList.remove('empty');
+            sensiOut.innerHTML = `
+                <div class="sensi-line"><span>Geral:</span><span class="sensi-value">${s.g}</span></div>
+                <div class="sensi-line"><span>Red Dot:</span><span class="sensi-value">${s.r}</span></div>
+                <div class="sensi-line"><span>Mira 2x:</span><span class="sensi-value">${s.m2}</span></div>
+                <div class="sensi-line"><span>Mira 4x:</span><span class="sensi-value">${s.m4}</span></div>
+            `;
+            
+            // Cria o texto para o botão copiar usar depois
+            sensiOut.dataset.copyText = `Geral: ${s.g}\nRed Dot: ${s.r}\n2x: ${s.m2}\n4x: ${s.m4}`;
+        };
+    }
+
+    // --- ATIVAÇÃO DE CARDS E PACOTE ELITE ---
+    document.addEventListener('click', (e) => {
+        const card = e.target.closest('.card, .glass[style*="padding: 18px"]');
+        if (!card) return;
+
+        const toggle = card.querySelector('.toggle');
+        if (!toggle) return;
+
+        const isMaster = toggle.id === 'masterToggle';
+        const isTurningOn = !toggle.classList.contains('on');
+
+        if (isMaster) {
+            toggle.classList.toggle('on', isTurningOn);
+            // Ativa TODOS os cards do painel
+            document.querySelectorAll('.card').forEach(c => {
+                c.classList.toggle('active', isTurningOn);
+                const t = c.querySelector('.toggle');
+                if (t) t.classList.toggle('on', isTurningOn);
+            });
+        } else {
+            const isOn = toggle.classList.toggle('on');
+            card.classList.toggle('active', isOn);
+        }
+        if (navigator.vibrate) navigator.vibrate(10);
     });
 
-    // 6. SISTEMA DE INJEÇÃO
-    const startInjection = (pkg) => {
+    // --- NAVEGAÇÃO TABS ---
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.onclick = () => {
+            document.querySelectorAll('.tab-btn, .tab-content').forEach(el => el.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+        };
+    });
+
+            // --- SISTEMA DE INJEÇÃO PREMIUM (FIXED) ---
+    window.startInjection = (pkg) => {
         const panel = document.getElementById('injectionPanel');
         const logs = document.getElementById('terminalLogs');
         const progress = document.getElementById('progressFill');
         const complete = document.getElementById('injectionComplete');
         
-        panel.classList.add('active');
+        // MOSTRA O PAINEL DE LOGS
+        panel.style.display = 'block'; 
+        complete.classList.remove('active');
+        progress.style.width = '0%';
         logs.innerHTML = '';
         
         const steps = [
-            "Lendo estrutura do kernel...",
-            "Verificando permissões root...",
-            "Injetando scripts Anti-Ban...",
-            "Otimizando buffers de memória...",
-            "Finalizando registro..."
+            { t: "> [SYSTEM] Localizando Kernel do Android...", c: "#00d9ff" },
+            { t: "> [AUTH] Key Validada no Servidor.", c: "#00ff00" },
+            { t: "> [PATCH] Injetando No-Recoil 90%...", c: "#ffff00" },
+            { t: "> [MEMORY] Modificando valores de Memória...", c: "#ff4444" },
+            { t: "> [BYPASS] Anti-Cheat desativado com sucesso.", c: "#9d4edd" },
+            { t: "> [SUCCESS] REGEDIT APLICADO!", c: "#00ff00" }
         ];
 
         let i = 0;
@@ -1714,42 +1832,48 @@
             if (i < steps.length) {
                 const line = document.createElement('div');
                 line.className = 'log-line';
-                line.textContent = `[INFO] ${steps[i]}`;
+                line.style.color = steps[i].c;
+                line.style.fontWeight = "bold";
+                line.innerHTML = steps[i].t;
                 logs.appendChild(line);
-                progress.style.width = ((i + 1) * 20) + '%';
+                logs.scrollTop = logs.scrollHeight;
+                progress.style.width = ((i + 1) * (100 / steps.length)) + '%';
                 i++;
             } else {
                 clearInterval(interval);
                 complete.classList.add('active');
                 setTimeout(() => {
+                    // Tenta abrir o Free Fire
                     window.location.href = `intent:#Intent;package=${pkg};end`;
-                }, 1500);
+                    
+                    // Fecha o painel de logs após 3 segundos para os botões voltarem a aparecer limpos
+                    setTimeout(() => { panel.style.display = 'none'; }, 3000);
+                }, 1200);
             }
-        }, 800);
+        }, 400);
     };
 
-    document.getElementById('injectFF').onclick = () => startInjection('com.dts.freefireth');
-    document.getElementById('injectFFMax').onclick = () => startInjection('com.dts.freefiremax');
+    // Configuração dos cliques
+    const btnFF = document.getElementById('injectFF');
+    const btnFFMax = document.getElementById('injectFFMax');
 
-    // 7. PARTÍCULAS DE FUNDO
-    const particlesContainer = document.getElementById('particles');
-    if (particlesContainer) {
-        setInterval(() => {
-            const p = document.createElement('div');
-            p.className = 'particle';
-            p.style.left = Math.random() * 100 + '%';
-            particlesContainer.appendChild(p);
-            setTimeout(() => p.remove(), 8000);
-        }, 400);
-    }
-    
-    // 8. LOGOUT
+    if(btnFF) btnFF.onclick = () => window.startInjection('com.dts.freefireth');
+    if(btnFFMax) btnFFMax.onclick = () => window.startInjection('com.dts.freefiremax');
+
+    // LOGOUT
     document.getElementById('logoutBtn').onclick = () => location.reload();
 
-    console.log("🛡️ DNZ System v3 Loaded");
+    // PARTÍCULAS
+    const parts = document.getElementById('particles');
+    setInterval(() => {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.style.left = Math.random() * 100 + '%';
+        parts.appendChild(p);
+        setTimeout(() => p.remove(), 7000);
+    }, 500);
 </script>
-</body>
-</html>
+
 
     // 6. ANIMAÇÃO DE PARTÍCULAS (LOGIN)
     const particlesContainer = document.getElementById('particles');
